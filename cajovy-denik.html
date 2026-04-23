@@ -480,13 +480,14 @@ function renderList(){
     const teapot=t.teapot?`<span class="meta-item">🫖 ${esc(t.teapot)}</span>`:'';
     const steepCount=(t.steeps||[]).filter(s=>s.enabled).length;
     const steepC=steepCount?`<span class="meta-item">🔄 ${steepCount}×</span>`:'';
-    const stars=renderStarsDisplay(t.rating||0);
+    const stars=t.rating?`<span class="meta-item">★ ${t.rating}/10</span>`:'';
+    const pricePerGram=t.price100?`<span class="meta-item">💰 ${(parseFloat(t.price100)/50).toFixed(2)} Kč/g</span>`:'';
     return `<div class="tea-card" onclick="openDetail('${esc(t.id)}')">
       <div class="tea-thumb" style="background:${col}22">${thumb}</div>
       <div class="tea-info">
         <div class="tea-name">${esc(t.name)}</div>
         <div class="tea-tags">${tag}${origin}</div>
-        <div class="tea-meta">${grams}${vol}${teapot}${steepC}<span class="meta-item">${stars}</span></div>
+        <div class="tea-meta">${grams}${vol}${teapot}${steepC}${stars}${pricePerGram}</div>
       </div>
       <div class="tea-arrow">›</div>
     </div>`;
