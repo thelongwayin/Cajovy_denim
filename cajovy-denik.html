@@ -484,7 +484,13 @@ function renderList(){
     const origin=t.origin?`<span class="origin-tag">${esc(t.origin)}</span>`:'';
     const grams=t.grams?`<span class="meta-item">⚖ ${esc(t.grams)}g</span>`:'';
     const vol=t.volume?`<span class="meta-item">💧 ${esc(t.volume)}ml</span>`:'';
-    const teapot=t.teapot?`<span class="meta-item">🫖 ${esc(t.teapot)}</span>`:'';
+    let teapotAdj='';
+    if(t.teapot&&t.grams&&t.volume){
+      const _tp=teapots.find(x=>teapotName(x)===t.teapot);
+      const _tpVol=_tp?teapotVolume(_tp):null;
+      if(_tpVol)teapotAdj=` (${(parseFloat(t.grams)*_tpVol/parseFloat(t.volume)).toFixed(1)}g)`;
+    }
+    const teapot=t.teapot?`<span class="meta-item">🫖 ${esc(t.teapot)}${teapotAdj?`<span style="color:var(--gold);font-size:10px">${teapotAdj}</span>`:''}</span>`:'';
     const steepCount=(t.steeps||[]).filter(s=>s.enabled).length;
     const steepC=steepCount?`<span class="meta-item">🔄 ${steepCount}×</span>`:'';
     const stars=t.rating?`<span class="meta-item">★ ${t.rating}/10</span>`:'';
