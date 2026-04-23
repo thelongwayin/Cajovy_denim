@@ -86,9 +86,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .field-textarea::placeholder{color:var(--text4);-webkit-text-fill-color:var(--text4)}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 /* RATING IN FORM */
-.rating-stars{display:flex;gap:6px;margin-top:4px}
-.rating-star{font-size:26px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .1s;opacity:.3}
-.rating-star.active{opacity:1}
+.rating-stars{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
+.rating-star{font-size:22px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .1s;opacity:.25}
+.rating-star.active{opacity:1;color:var(--gold)}
 .rating-star:active{transform:scale(1.2)}
 /* CHIPS */
 .chips{display:flex;flex-wrap:wrap;gap:7px}
@@ -289,24 +289,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="chips" id="teapot-chips"></div>
         <div style="margin-top:8px"><span style="font-size:11px;color:var(--text4);font-family:'Crimson Pro',serif">Vlastní konvičky spravuj v <span style="color:var(--text3);cursor:pointer;text-decoration:underline" onclick="closeAdd();showView('settings',document.querySelectorAll('.nav-btn')[1])">Nastavení</span></span></div>
       </div>
-      <div class="two-col">
-        <div class="field">
-          <label class="field-label">Gramáž</label>
-          <div class="input-wrap"><input class="field-input with-unit" id="f-grams" type="number" placeholder="3"><span class="input-unit">g</span></div>
-        </div>
-        <div class="field">
-          <label class="field-label">Objem vody</label>
-          <div class="input-wrap"><input class="field-input with-unit" id="f-volume" type="number" placeholder="150"><span class="input-unit">ml</span></div>
-        </div>
-      </div>
       <!-- PRICE CALC -->
       <div class="field">
         <label class="field-label">Kalkulačka hodnoty</label>
         <div class="price-calc">
           <div class="two-col">
             <div class="field" style="margin-bottom:8px">
-              <div class="field-label">Cena za 100g</div>
-              <div class="input-wrap"><input class="field-input with-unit" id="f-price100" type="number" placeholder="500" oninput="calcPrice()"><span class="input-unit">Kč</span></div>
+              <div class="field-label">Cena za 50g</div>
+              <div class="input-wrap"><input class="field-input with-unit" id="f-price100" type="number" placeholder="300" oninput="calcPrice()"><span class="input-unit">Kč</span></div>
             </div>
             <div class="field" style="margin-bottom:8px">
               <div class="field-label">Počet nálevů</div>
@@ -319,8 +309,21 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           </div>
         </div>
       </div>
+      <div class="two-col">
+        <div class="field">
+          <label class="field-label">Gramáž</label>
+          <div class="input-wrap"><input class="field-input with-unit" id="f-grams" type="number" placeholder="3" oninput="calcPrice()"><span class="input-unit">g</span></div>
+        </div>
+        <div class="field">
+          <label class="field-label">Objem vody</label>
+          <div class="input-wrap"><input class="field-input with-unit" id="f-volume" type="number" placeholder="150"><span class="input-unit">ml</span></div>
+        </div>
+      </div>
       <div class="field">
-        <div class="section-title">Nálevy (až 6)</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div class="section-title" style="margin-bottom:0">Nálevy</div>
+          <button onclick="addSteep()" id="add-steep-btn" style="background:rgba(200,168,120,.12);border:1px solid rgba(200,168,120,.25);border-radius:20px;color:var(--gold);font-size:13px;padding:4px 14px;cursor:pointer;font-family:'Cormorant Garamond',serif">+ Přidat nálev</button>
+        </div>
         <div id="steeps-rows"></div>
       </div>
       <div class="field">
@@ -485,13 +488,14 @@ function renderList(){
 }
 
 function renderStarsDisplay(r){
-  return[1,2,3,4,5].map(i=>`<span style="font-size:12px;opacity:${i<=r?1:.2}">★</span>`).join('');
+  if(!r)return'';
+  return`<span style="font-size:11px;color:var(--gold);font-weight:600">${'★'.repeat(r)}</span><span style="font-size:10px;color:var(--text3);font-family:'Crimson Pro',serif"> ${r}/10</span>`;
 }
 
 // RATING
 function renderFormRating(current){
   _formRating=current||0;
-  document.getElementById('form-rating').innerHTML=[1,2,3,4,5].map(i=>
+  document.getElementById('form-rating').innerHTML=[1,2,3,4,5,6,7,8,9,10].map(i=>
     `<span class="rating-star${i<=_formRating?' active':''}" onclick="setFormRating(${i})">★</span>`
   ).join('');
 }
@@ -507,7 +511,7 @@ function calcPrice(){
   const sc=parseFloat(document.getElementById('f-steepcount').value)||1;
   const res=document.getElementById('price-result');
   if(!p||!g){res.style.display='none';return}
-  const perGram=p/100;
+  const perGram=p/50; // 50g balení
   const perSteep=(perGram*g)/sc;
   document.getElementById('pr-gram').textContent=perGram.toFixed(2)+' Kč';
   document.getElementById('pr-steep').textContent=perSteep.toFixed(2)+' Kč';
@@ -545,9 +549,16 @@ function openAdd(editId){
   if(t&&t.price100)calcPrice();
   renderFormRating(t?t.rating:0);
   steepData=t&&t.steeps?JSON.parse(JSON.stringify(t.steeps)):[
-    {time:'',temp:'',note:'',enabled:true},{time:'',temp:'',note:'',enabled:false},
-    {time:'',temp:'',note:'',enabled:false},{time:'',temp:'',note:'',enabled:false},
-    {time:'',temp:'',note:'',enabled:false},{time:'',temp:'',note:'',enabled:false},
+    {time:'60',temp:'80',note:'',enabled:true},
+    {time:'60',temp:'80',note:'',enabled:true},
+    {time:'60',temp:'80',note:'',enabled:true},
+    {time:'',temp:'',note:'',enabled:false},
+    {time:'',temp:'',note:'',enabled:false},
+    {time:'',temp:'',note:'',enabled:false},
+    {time:'',temp:'',note:'',enabled:false},
+    {time:'',temp:'',note:'',enabled:false},
+    {time:'',temp:'',note:'',enabled:false},
+    {time:'',temp:'',note:'',enabled:false},
   ];
   renderSteeps();
   _selectedType=t?(t.type||''):'';renderTypeChips(_selectedType);
@@ -573,32 +584,53 @@ function renderTeapotChips(sel){
 function selectTeapot(tp){_selectedTeapot=_selectedTeapot===tp?'':tp;renderTeapotChips(_selectedTeapot)}
 
 function renderSteeps(){
-  document.getElementById('steeps-rows').innerHTML=steepData.map((s,i)=>`
-    <div class="steep-row">
+  const activeCount=steepData.filter(s=>s.enabled).length;
+  const btn=document.getElementById('add-steep-btn');
+  if(btn)btn.style.display=activeCount>=10?'none':'block';
+
+  document.getElementById('steeps-rows').innerHTML=steepData.map((s,i)=>{
+    if(!s.enabled)return'';
+    return`<div class="steep-row">
       <div class="steep-num">${i+1}</div>
       <div class="steep-fields">
         <div class="steep-top">
           <div class="steep-field-wrap">
             <div class="steep-label">Čas</div>
             <div class="steep-input-wrap">
-              <input class="steep-input" type="number" placeholder="60" value="${esc(s.time)}" ${!s.enabled?'disabled style="opacity:.35"':''} oninput="steepData[${i}].time=this.value">
+              <input class="steep-input" type="number" placeholder="60" value="${esc(s.time)}"
+                oninput="steepData[${i}].time=this.value">
               <span class="steep-unit">s</span>
             </div>
           </div>
           <div class="steep-field-wrap">
             <div class="steep-label">Teplota</div>
             <div class="steep-input-wrap">
-              <input class="steep-input" type="number" placeholder="80" value="${esc(s.temp)}" ${!s.enabled?'disabled style="opacity:.35"':''} oninput="steepData[${i}].temp=this.value">
+              <input class="steep-input" type="number" placeholder="80" value="${esc(s.temp)}"
+                oninput="steepData[${i}].temp=this.value">
               <span class="steep-unit">°C</span>
             </div>
           </div>
+          <button class="steep-toggle active" onclick="removeSteep(${i})" title="Odebrat" style="color:var(--danger-text);border-color:var(--danger-border)">✕</button>
         </div>
-        ${s.enabled?`<input class="steep-note-input" placeholder="Poznámka k nálevu…" value="${esc(s.note||'')}" oninput="steepData[${i}].note=this.value">`:''}
+        <input class="steep-note-input" placeholder="Poznámka k nálevu…" value="${esc(s.note||'')}" oninput="steepData[${i}].note=this.value">
       </div>
-      <button class="steep-toggle${s.enabled?' active':''}" onclick="toggleSteep(${i})">${s.enabled?'✓':'＋'}</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
-function toggleSteep(i){steepData[i].enabled=!steepData[i].enabled;renderSteeps()}
+function addSteep(){
+  const idx=steepData.findIndex(s=>!s.enabled);
+  if(idx===-1)return;
+  steepData[idx]={time:'60',temp:'80',note:'',enabled:true};
+  renderSteeps();
+}
+function removeSteep(i){
+  steepData[i]={time:'',temp:'',note:'',enabled:false};
+  // Re-pack: move all enabled to front
+  const active=steepData.filter(s=>s.enabled);
+  const inactive=steepData.filter(s=>!s.enabled);
+  steepData=[...active,...inactive];
+  renderSteeps();
+}
 function checkSave(){document.getElementById('save-btn').disabled=!document.getElementById('f-name').value.trim()}
 
 function saveTea(){
@@ -636,7 +668,7 @@ function openDetail(id){
   else{const em=document.createElement('div');em.className='detail-hero-emoji';em.textContent='🍃';hero.insertBefore(em,hero.firstChild)}
 
   const tag=t.type?`<span class="tag" style="background:${col}33;color:#fff;border:1px solid ${col}66;text-shadow:0 1px 3px rgba(0,0,0,.5)">${esc(t.type)}</span>`:'';
-  const starsHtml=`<span style="font-size:16px;letter-spacing:1px">${[1,2,3,4,5].map(i=>`<span style="opacity:${i<=(t.rating||0)?1:.25}">★</span>`).join('')}</span>`;
+  const starsHtml=t.rating?`<span style="font-size:15px;color:var(--gold)">★ ${t.rating}/10</span>`:'';
   document.getElementById('detail-hero-content').innerHTML=`
     <div class="detail-name">${esc(t.name)}</div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${tag}${t.origin?`<span style="font-size:12px;color:rgba(255,255,255,.8);font-family:'Crimson Pro',serif;text-shadow:0 1px 4px rgba(0,0,0,.6)">${esc(t.origin)}</span>`:''}${starsHtml}</div>`;
@@ -649,7 +681,7 @@ function openDetail(id){
   // Price info
   let priceHtml='';
   if(t.price100&&t.grams){
-    const pg=parseFloat(t.price100)/100;
+    const pg=parseFloat(t.price100)/50; // 50g balení
     const sc=parseFloat(t.steepcount)||1;
     const ps=(pg*parseFloat(t.grams))/sc;
     priceHtml=`<div class="params-grid" style="margin-bottom:20px">
