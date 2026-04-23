@@ -237,6 +237,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <button class="sort-btn active" onclick="setSort('newest',this)">Nejnovější</button>
       <button class="sort-btn" onclick="setSort('alpha',this)">A–Z</button>
       <button class="sort-btn" onclick="setSort('rating',this)">Hodnocení</button>
+      <button class="sort-btn" onclick="setSort('price',this)">Cena/g</button>
     </div>
     <div class="tea-list" id="tea-list"></div>
   </div>
@@ -457,6 +458,11 @@ function renderList(){
   if(_filterType)filtered=filtered.filter(t=>t.type===_filterType);
   if(_sortMode==='alpha')filtered=[...filtered].sort((a,b)=>a.name.localeCompare(b.name,'cs'));
   else if(_sortMode==='rating')filtered=[...filtered].sort((a,b)=>(b.rating||0)-(a.rating||0));
+  else if(_sortMode==='price')filtered=[...filtered].sort((a,b)=>{
+    const pa=a.price100?(parseFloat(a.price100)/50):Infinity;
+    const pb=b.price100?(parseFloat(b.price100)/50):Infinity;
+    return pa-pb;
+  });
 
   const list=document.getElementById('tea-list');
   document.getElementById('tea-count').textContent=teas.length+' '+plural(teas.length,'čaj','čaje','čajů')+' v kolekci';
